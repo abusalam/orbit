@@ -134,8 +134,8 @@
 
     .wheel-wrap {
       position: relative;
-      width: min(74vw, 56vh, 500px);
-      width: min(74vw, 56dvh, 500px);
+      width: min(88vw, 72vh, 760px);
+      width: min(88vw, 72dvh, 760px);
       aspect-ratio: 1;
       display: grid;
       place-items: center;
@@ -324,8 +324,8 @@
     @media (max-width: 520px) {
       .app { padding-inline: 20px; }
       .wheel-wrap {
-        width: min(82vw, 49vh, 420px);
-        width: min(82vw, 49dvh, 420px);
+        width: min(94vw, 68vh, 700px);
+        width: min(94vw, 68dvh, 700px);
       }
       .bottombar { align-items: center; }
       .instruction-subtitle { max-width: 240px; line-height: 1.5; }
@@ -336,7 +336,7 @@
 
     @media (max-height: 520px) and (orientation: landscape) {
       .app { padding-top: max(14px, env(safe-area-inset-top)); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
-      .wheel-wrap { width: min(47vh, 58vw, 360px); width: min(47dvh, 58vw, 360px); }
+      .wheel-wrap { width: min(76vh, 70vw, 620px); width: min(76dvh, 70vw, 620px); }
       .instruction-title { font-size: 16px; }
     }
 
@@ -407,8 +407,11 @@
       let lastY = 0;
       let gestureSamples = [];
 
-      const friction = 0.99;
-      const maxVelocity = 18;
+      const friction = 0.985;
+      const maxVelocity = 300;
+      const dragSensitivity = 0.72;
+      const swipeMomentum = 1.35;
+      const velocityWindowMs = 80;
 
       const baseHue = Math.random() * 360;
       for (let index = 0; index < 8; index += 1) {
@@ -481,10 +484,10 @@
         if (event.pointerId !== pointerId) return;
         const now = performance.now();
         const deltaY = event.clientY - lastY;
-        rotation += deltaY * 0.72;
+        rotation += deltaY * dragSensitivity;
         lastY = event.clientY;
         gestureSamples.push({ y: lastY, time: now });
-        while (gestureSamples.length > 2 && gestureSamples[1].time < now - 100) {
+        while (gestureSamples.length > 2 && gestureSamples[1].time < now - velocityWindowMs) {
           gestureSamples.shift();
         }
         render();
@@ -496,7 +499,7 @@
         const firstSample = gestureSamples[0];
         const lastSample = gestureSamples[gestureSamples.length - 1];
         const elapsed = Math.max(1, lastSample.time - firstSample.time);
-        const velocity = ((lastSample.y - firstSample.y) * 0.72 / elapsed) * 16.67;
+        const velocity = ((lastSample.y - firstSample.y) * dragSensitivity / elapsed) * 16.67 * swipeMomentum;
         startSpin(velocity);
       }
 
