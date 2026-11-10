@@ -235,12 +235,12 @@
       position: absolute;
       z-index: 2;
       display: grid;
-      width: 22%;
+      width: 14%;
       aspect-ratio: 1;
       place-items: center;
       border: 1px solid rgba(255, 255, 255, .26);
       border-radius: 50%;
-      background: linear-gradient(145deg, #24203c, #100f1c 75%);
+      background: var(--pointer-color);
       box-shadow: 0 5px 22px rgba(8, 7, 18, .55), inset 0 1px 5px rgba(255, 255, 255, .14);
       pointer-events: none;
     }
@@ -373,8 +373,8 @@
         <div class="hub" aria-hidden="true"><div class="hub-core"></div></div>
         <div class="pointer" aria-hidden="true">
           <svg viewBox="0 0 30 42" fill="none">
-            <path d="M15 40 2.5 4.5C1.7 2.2 4.1.2 6.2 1.5L15 7l8.8-5.5c2.1-1.3 4.5.7 3.7 3L15 40Z" fill="#F7F3FF"/>
-            <path d="M15 38 4.4 7.8 15 13.6 25.6 7.8 15 38Z" fill="#C5AEFF"/>
+            <path d="M15 40 2.5 4.5C1.7 2.2 4.1.2 6.2 1.5L15 7l8.8-5.5c2.1-1.3 4.5.7 3.7 3L15 40Z" fill="var(--pointer-color)"/>
+            <path d="M15 38 4.4 7.8 15 13.6 25.6 7.8 15 38Z" fill="#fff" fill-opacity=".3"/>
           </svg>
         </div>
       </div>
@@ -394,6 +394,8 @@
       const app = document.getElementById("app");
       const stage = document.getElementById("stage");
       const wheel = document.getElementById("wheel");
+      const pointer = document.querySelector(".pointer");
+      const hub = document.querySelector(".hub");
       const fullscreenButton = document.getElementById("fullscreenButton");
       const instructionTitle = document.getElementById("instructionTitle");
       const instructionSubtitle = document.getElementById("instructionSubtitle");
@@ -418,6 +420,11 @@
 
       function render() {
         wheel.style.transform = `rotate(${rotation}deg)`;
+        const pointerAngle = ((22.5 - rotation) % 360 + 360) % 360;
+        const colorIndex = Math.floor(pointerAngle / 45);
+        const indicatorColor = colors[colorIndex];
+        pointer.style.setProperty("--pointer-color", indicatorColor);
+        hub.style.setProperty("--pointer-color", indicatorColor);
       }
 
       function setSpinning(spinning) {
@@ -460,6 +467,8 @@
         setSpinning(true);
         animationFrame = requestAnimationFrame(animate);
       }
+
+      render();
 
       stage.addEventListener("pointerdown", (event) => {
         if (event.pointerType === "mouse" && event.button !== 0) return;
