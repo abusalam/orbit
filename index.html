@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0b16">
+  <title>Orbit — Swipe to spin</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0a0b16;
+      color: #f7f5ff;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      background:
+        radial-gradient(ellipse at 50% 46%, rgba(84, 55, 169, .24), transparent 38%),
+        radial-gradient(ellipse at 50% 110%, rgba(25, 115, 129, .12), transparent 42%),
+        #0a0b16;
+    }
+
+    button { font: inherit; }
+
+    .app {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      width: 100%;
+      height: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: max(25px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .app::before, .app::after {
+      position: absolute;
+      z-index: -1;
+      width: 1px;
+      height: 1px;
+      content: "";
+      border-radius: 50%;
+      box-shadow: 0 0 180px 100px rgba(121, 76, 255, .09);
+      pointer-events: none;
+    }
+
+    .app::before { top: 21%; left: 10%; }
+    .app::after {
+      right: 12%;
+      bottom: 12%;
+      box-shadow: 0 0 150px 90px rgba(48, 202, 195, .07);
+    }
+
+    .topbar, .bottombar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: min(100%, 980px);
+      margin-inline: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #f4f0ff;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border: 1px solid rgba(181, 160, 255, .35);
+      border-radius: 10px;
+      color: #c3adff;
+      background: rgba(139, 103, 255, .13);
+      box-shadow: 0 0 22px rgba(132, 95, 255, .19);
+    }
+
+    .fullscreen {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 42px;
+      padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, .11);
+      border-radius: 13px;
+      color: rgba(241, 238, 255, .82);
+      background: rgba(255, 255, 255, .045);
+      cursor: pointer;
+      transition: background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+
+    .fullscreen:hover {
+      border-color: rgba(190, 169, 255, .4);
+      background: rgba(255, 255, 255, .09);
+    }
+
+    .fullscreen:active { transform: scale(.97); }
+    .fullscreen svg { width: 16px; height: 16px; }
+
+    .stage {
+      display: grid;
+      min-height: 0;
+      place-items: center;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .wheel-wrap {
+      position: relative;
+      width: min(74vw, 56vh, 500px);
+      width: min(74vw, 56dvh, 500px);
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+    }
+
+    .wheel-wrap::before {
+      position: absolute;
+      inset: -9%;
+      content: "";
+      border: 1px solid rgba(193, 174, 255, .09);
+      border-radius: 50%;
+      box-shadow: 0 0 60px rgba(134, 97, 255, .08), inset 0 0 50px rgba(134, 97, 255, .035);
+    }
+
+    .wheel-wrap::after {
+      position: absolute;
+      inset: -15%;
+      content: "";
+      border: 1px solid rgba(193, 174, 255, .045);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .wheel {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      border: 7px solid #171526;
+      border-radius: 50%;
+      background: conic-gradient(
+        from -22.5deg,
+        #8b68fa 0deg 45deg,
+        #21a9a2 45deg 90deg,
+        #5141bd 90deg 135deg,
+        #e17b74 135deg 180deg,
+        #7652d8 180deg 225deg,
+        #3b94bd 225deg 270deg,
+        #b270d5 270deg 315deg,
+        #4d69d7 315deg 360deg
+      );
+      box-shadow:
+        0 24px 80px rgba(0, 0, 0, .48),
+        0 0 75px rgba(121, 85, 235, .15),
+        inset 0 0 0 1px rgba(255, 255, 255, .14);
+      will-change: transform;
+      cursor: grab;
+    }
+
+    .wheel:active { cursor: grabbing; }
+
+    .wheel::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      border-radius: inherit;
+      background: repeating-conic-gradient(
+        from -22.5deg,
+        transparent 0deg 44.55deg,
+        rgba(13, 12, 30, .68) 44.55deg 45deg
+      );
+    }
+
+    .wheel::after {
+      position: absolute;
+      inset: 0;
+      content: "";
+      border-radius: inherit;
+      background: radial-gradient(circle at 34% 24%, rgba(255, 255, 255, .14), transparent 32%);
+      pointer-events: none;
+    }
+
+    .wheel-label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 1;
+      color: rgba(255, 255, 255, .96);
+      font-size: clamp(11px, 2.5vw, 15px);
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-shadow: 0 2px 9px rgba(17, 10, 47, .45);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .wheel-label:nth-child(1) { top: 17%; }
+    .wheel-label:nth-child(2) { top: 25%; left: 75%; }
+    .wheel-label:nth-child(3) { left: 83%; }
+    .wheel-label:nth-child(4) { top: 75%; left: 75%; }
+    .wheel-label:nth-child(5) { top: 83%; }
+    .wheel-label:nth-child(6) { top: 75%; left: 25%; }
+    .wheel-label:nth-child(7) { left: 17%; }
+    .wheel-label:nth-child(8) { top: 25%; left: 25%; }
+
+    .hub {
+      position: absolute;
+      z-index: 2;
+      display: grid;
+      width: 22%;
+      aspect-ratio: 1;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, .26);
+      border-radius: 50%;
+      background: linear-gradient(145deg, #24203c, #100f1c 75%);
+      box-shadow: 0 5px 22px rgba(8, 7, 18, .55), inset 0 1px 5px rgba(255, 255, 255, .14);
+      pointer-events: none;
+    }
+
+    .hub-core {
+      width: 26%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #c4aaff, #7955e7);
+      box-shadow: 0 0 24px rgba(155, 117, 255, .8);
+    }
+
+    .pointer {
+      position: absolute;
+      top: -4.5%;
+      z-index: 3;
+      width: 30px;
+      height: 42px;
+      filter: drop-shadow(0 5px 8px rgba(0, 0, 0, .5));
+      pointer-events: none;
+    }
+
+    .pointer svg { display: block; width: 100%; height: 100%; }
+
+    .bottombar {
+      align-items: flex-end;
+    }
+
+    .instruction {
+      display: grid;
+      gap: 7px;
+    }
+
+    .instruction-title {
+      color: #f2efff;
+      font-size: clamp(16px, 2.4vw, 21px);
+      font-weight: 650;
+      letter-spacing: -.025em;
+    }
+
+    .instruction-subtitle {
+      color: rgba(203, 198, 222, .58);
+      font-size: 13px;
+      letter-spacing: .015em;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 99px;
+      color: rgba(231, 227, 247, .65);
+      background: rgba(255, 255, 255, .035);
+      font-size: 11px;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #a78bfa;
+      box-shadow: 0 0 10px rgba(167, 139, 250, .85);
+    }
+
+    .app.is-spinning .status-dot {
+      background: #53dfca;
+      box-shadow: 0 0 10px rgba(83, 223, 202, .85);
+    }
+
+    button:focus-visible {
+      outline: 2px solid #bca7ff;
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 520px) {
+      .app { padding-inline: 20px; }
+      .wheel-wrap {
+        width: min(82vw, 49vh, 420px);
+        width: min(82vw, 49dvh, 420px);
+      }
+      .bottombar { align-items: center; }
+      .instruction-subtitle { max-width: 240px; line-height: 1.5; }
+      .status { padding-inline: 9px; font-size: 9px; }
+      .fullscreen-label { display: none; }
+      .fullscreen { width: 42px; padding: 0; }
+    }
+
+    @media (max-height: 520px) and (orientation: landscape) {
+      .app { padding-top: max(14px, env(safe-area-inset-top)); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+      .wheel-wrap { width: min(47vh, 58vw, 360px); width: min(47dvh, 58vw, 360px); }
+      .instruction-title { font-size: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+      .fullscreen { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span> Orbit</div>
+      <button class="fullscreen" id="fullscreenButton" type="button" aria-label="Enter fullscreen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+        <span class="fullscreen-label">Go fullscreen</span>
+      </button>
+    </header>
+
+    <section class="stage" id="stage" aria-label="Swipe up or down on the wheel to spin it">
+      <div class="wheel-wrap">
+        <div class="wheel" id="wheel" role="img" aria-label="Eight-section color wheel">
+          <span class="wheel-label">NOVA</span>
+          <span class="wheel-label">TIDE</span>
+          <span class="wheel-label">ORBIT</span>
+          <span class="wheel-label">GLOW</span>
+          <span class="wheel-label">NOVA</span>
+          <span class="wheel-label">TIDE</span>
+          <span class="wheel-label">ORBIT</span>
+          <span class="wheel-label">GLOW</span>
+        </div>
+        <div class="hub" aria-hidden="true"><div class="hub-core"></div></div>
+        <div class="pointer" aria-hidden="true">
+          <svg viewBox="0 0 30 42" fill="none">
+            <path d="M15 40 2.5 4.5C1.7 2.2 4.1.2 6.2 1.5L15 7l8.8-5.5c2.1-1.3 4.5.7 3.7 3L15 40Z" fill="#F7F3FF"/>
+            <path d="M15 38 4.4 7.8 15 13.6 25.6 7.8 15 38Z" fill="#C5AEFF"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <footer class="bottombar">
+      <div class="instruction">
+        <div class="instruction-title" id="instructionTitle">Swipe to set it in motion</div>
+        <div class="instruction-subtitle" id="instructionSubtitle">Swipe up or down. The faster you swipe, the longer it spins.</div>
+      </div>
+      <div class="status" aria-live="polite"><span class="status-dot"></span><span id="statusText">Ready to spin</span></div>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const app = document.getElementById("app");
+      const stage = document.getElementById("stage");
+      const wheel = document.getElementById("wheel");
+      const fullscreenButton = document.getElementById("fullscreenButton");
+      const instructionTitle = document.getElementById("instructionTitle");
+      const instructionSubtitle = document.getElementById("instructionSubtitle");
+      const statusText = document.getElementById("statusText");
+
+      let rotation = 0;
+      let angularVelocity = 0;
+      let animationFrame = 0;
+      let lastFrameTime = 0;
+      let pointerId = null;
+      let lastY = 0;
+      let lastTime = 0;
+      let gestureVelocity = 0;
+
+      const friction = 0.986;
+      const maxVelocity = 1.8;
+
+      function render() {
+        wheel.style.transform = `rotate(${rotation}deg)`;
+      }
+
+      function setSpinning(spinning) {
+        app.classList.toggle("is-spinning", spinning);
+        statusText.textContent = spinning ? "In motion" : "Ready to spin";
+        instructionTitle.textContent = spinning ? "Feel the momentum" : "Swipe to set it in motion";
+        instructionSubtitle.textContent = spinning
+          ? "Swipe in either direction to add more spin."
+          : "Swipe up or down. The faster you swipe, the longer it spins.";
+      }
+
+      function stopAnimation() {
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+      }
+
+      function animate(now) {
+        const frameScale = lastFrameTime ? Math.min((now - lastFrameTime) / 16.67, 4) : 1;
+        lastFrameTime = now;
+        rotation += angularVelocity * frameScale;
+        angularVelocity *= Math.pow(friction, frameScale);
+
+        if (Math.abs(angularVelocity) < 0.015) {
+          angularVelocity = 0;
+          animationFrame = 0;
+          render();
+          setSpinning(false);
+          return;
+        }
+
+        render();
+        animationFrame = requestAnimationFrame(animate);
+      }
+
+      function startSpin(velocity) {
+        angularVelocity = Math.max(-maxVelocity, Math.min(maxVelocity, velocity));
+        if (Math.abs(angularVelocity) < 0.04) return;
+        stopAnimation();
+        lastFrameTime = 0;
+        setSpinning(true);
+        animationFrame = requestAnimationFrame(animate);
+      }
+
+      stage.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        pointerId = event.pointerId;
+        stage.setPointerCapture(pointerId);
+        lastY = event.clientY;
+        lastTime = performance.now();
+        gestureVelocity = 0;
+        stopAnimation();
+        angularVelocity = 0;
+        setSpinning(false);
+      });
+
+      stage.addEventListener("pointermove", (event) => {
+        if (event.pointerId !== pointerId) return;
+        const now = performance.now();
+        const deltaY = event.clientY - lastY;
+        const elapsed = Math.max(1, now - lastTime);
+        rotation += deltaY * 0.72;
+        gestureVelocity = (deltaY * 0.72) / elapsed;
+        lastY = event.clientY;
+        lastTime = now;
+        render();
+      });
+
+      function endGesture(event) {
+        if (event.pointerId !== pointerId) return;
+        pointerId = null;
+        startSpin(gestureVelocity * 16.67);
+      }
+
+      stage.addEventListener("pointerup", endGesture);
+      stage.addEventListener("pointercancel", endGesture);
+      stage.addEventListener("lostpointercapture", (event) => {
+        if (event.pointerId === pointerId) pointerId = null;
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key !== "ArrowUp" && event.key !== "ArrowDown" && event.code !== "Space") return;
+        if (event.target instanceof HTMLElement && event.target.closest("button")) return;
+        event.preventDefault();
+        const direction = event.key === "ArrowUp" ? -1 : 1;
+        startSpin(direction * (event.code === "Space" ? 1.25 : 0.85));
+      });
+
+      fullscreenButton.addEventListener("click", async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (error) {
+          statusText.textContent = "Fullscreen unavailable";
+          window.setTimeout(() => {
+            if (!app.classList.contains("is-spinning")) statusText.textContent = "Ready to spin";
+          }, 1800);
+        }
+      });
+
+      document.addEventListener("fullscreenchange", () => {
+        const isFullscreen = Boolean(document.fullscreenElement);
+        fullscreenButton.setAttribute("aria-label", isFullscreen ? "Exit fullscreen" : "Enter fullscreen");
+        fullscreenButton.querySelector(".fullscreen-label").textContent = isFullscreen ? "Exit fullscreen" : "Go fullscreen";
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
