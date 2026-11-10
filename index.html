@@ -361,14 +361,14 @@
     <section class="stage" id="stage" aria-label="Swipe up or down on the wheel to spin it">
       <div class="wheel-wrap">
         <div class="wheel" id="wheel" role="img" aria-label="Eight-section color wheel">
-          <span class="wheel-label">NOVA</span>
-          <span class="wheel-label">TIDE</span>
-          <span class="wheel-label">ORBIT</span>
-          <span class="wheel-label">GLOW</span>
-          <span class="wheel-label">NOVA</span>
-          <span class="wheel-label">TIDE</span>
-          <span class="wheel-label">ORBIT</span>
-          <span class="wheel-label">GLOW</span>
+          <span class="wheel-label">RED</span>
+          <span class="wheel-label">ORANGE</span>
+          <span class="wheel-label">YELLOW</span>
+          <span class="wheel-label">LIME</span>
+          <span class="wheel-label">TEAL</span>
+          <span class="wheel-label">BLUE</span>
+          <span class="wheel-label">PURPLE</span>
+          <span class="wheel-label">PINK</span>
         </div>
         <div class="hub" aria-hidden="true"><div class="hub-core"></div></div>
         <div class="pointer" aria-hidden="true">
@@ -413,16 +413,8 @@
       const swipeMomentum = 1.35;
       const velocityWindowMs = 80;
 
-      const baseHue = Math.random() * 360;
-      for (let index = 0; index < 8; index += 1) {
-        const hue = (baseHue + index * 45 + (Math.random() - 0.5) * 24 + 360) % 360;
-        const saturation = 65 + Math.random() * 16;
-        const lightness = 45 + Math.random() * 12;
-        wheel.style.setProperty(
-          `--color-${index + 1}`,
-          `hsl(${hue.toFixed(1)} ${saturation.toFixed(1)}% ${lightness.toFixed(1)}%)`
-        );
-      }
+      const colors = ["#e74c3c", "#f97316", "#facc15", "#84cc16", "#14b8a6", "#3b82f6", "#8b5cf6", "#ec4899"];
+      colors.forEach((color, index) => wheel.style.setProperty(`--color-${index + 1}`, color));
 
       function render() {
         wheel.style.transform = `rotate(${rotation}deg)`;
