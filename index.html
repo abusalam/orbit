@@ -166,17 +166,7 @@
       overflow: hidden;
       border: 7px solid #171526;
       border-radius: 50%;
-      background: conic-gradient(
-        from -22.5deg,
-        var(--color-1) 0deg 45deg,
-        var(--color-2) 45deg 90deg,
-        var(--color-3) 90deg 135deg,
-        var(--color-4) 135deg 180deg,
-        var(--color-5) 180deg 225deg,
-        var(--color-6) 225deg 270deg,
-        var(--color-7) 270deg 315deg,
-        var(--color-8) 315deg 360deg
-      );
+      background: var(--wheel-background, #e74c3c);
       box-shadow:
         0 24px 80px rgba(0, 0, 0, .48),
         0 0 75px rgba(121, 85, 235, .15),
@@ -193,9 +183,9 @@
       content: "";
       border-radius: inherit;
       background: repeating-conic-gradient(
-        from -22.5deg,
-        transparent 0deg 44.55deg,
-        rgba(13, 12, 30, .68) 44.55deg 45deg
+        from var(--wheel-start-angle),
+        transparent 0deg calc(var(--segment-angle) - .45deg),
+        rgba(13, 12, 30, .68) calc(var(--segment-angle) - .45deg) var(--segment-angle)
       );
     }
 
@@ -214,22 +204,13 @@
       left: 50%;
       z-index: 1;
       color: rgba(255, 255, 255, .96);
-      font-size: clamp(11px, 2.5vw, 15px);
+      font-size: clamp(7px, 2vw, 15px);
       font-weight: 800;
       letter-spacing: .13em;
       text-shadow: 0 2px 9px rgba(17, 10, 47, .45);
-      transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%) rotate(var(--label-angle));
       pointer-events: none;
     }
-
-    .wheel-label:nth-child(1) { top: 17%; }
-    .wheel-label:nth-child(2) { top: 25%; left: 75%; }
-    .wheel-label:nth-child(3) { left: 83%; }
-    .wheel-label:nth-child(4) { top: 75%; left: 75%; }
-    .wheel-label:nth-child(5) { top: 83%; }
-    .wheel-label:nth-child(6) { top: 75%; left: 25%; }
-    .wheel-label:nth-child(7) { left: 17%; }
-    .wheel-label:nth-child(8) { top: 25%; left: 25%; }
 
     .hub {
       position: absolute;
@@ -264,6 +245,92 @@
     }
 
     .pointer svg { display: block; width: 100%; height: 100%; }
+
+    .settings-view {
+      display: flex;
+      min-height: 0;
+      justify-content: center;
+      overflow-y: auto;
+    }
+
+    .settings-card {
+      display: grid;
+      gap: 20px;
+      width: min(100%, 420px);
+      margin-block: auto;
+      padding: clamp(24px, 6vw, 40px);
+      border: 1px solid rgba(255, 255, 255, .1);
+      border-radius: 24px;
+      background: rgba(18, 16, 34, .82);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .35);
+    }
+
+    .settings-card h1 {
+      margin: 0;
+      color: #f4f0ff;
+      font-size: clamp(24px, 5vw, 32px);
+      letter-spacing: -.04em;
+    }
+
+    .settings-description {
+      margin: -12px 0 0;
+      color: rgba(203, 198, 222, .7);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .settings-label {
+      display: grid;
+      gap: 9px;
+      color: #e7e3f7;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .settings-select {
+      min-height: 46px;
+      padding: 0 13px;
+      border: 1px solid rgba(255, 255, 255, .15);
+      border-radius: 12px;
+      color: #f7f5ff;
+      background: #171526;
+      font: inherit;
+    }
+
+    .settings-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .settings-save, .settings-back {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 15px;
+      border: 1px solid rgba(190, 169, 255, .28);
+      border-radius: 12px;
+      color: #f4f0ff;
+      background: rgba(139, 103, 255, .16);
+      font: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .settings-message {
+      min-height: 1.4em;
+      margin: -8px 0 0;
+      color: #bca7ff;
+      font-size: 13px;
+    }
+
+    [hidden] { display: none !important; }
+
+    .app.settings-mode { grid-template-rows: auto 1fr; }
+    .settings-mode .stage, .settings-mode .bottombar, .settings-mode .fullscreen { display: none; }
+    .settings-mode #settingsView { display: grid; }
 
     .bottombar {
       align-items: flex-end;
@@ -358,18 +425,41 @@
       </button>
     </header>
 
+    <section class="settings-view" id="settingsView" hidden aria-labelledby="settingsTitle">
+      <form class="settings-card" id="settingsForm">
+        <h1 id="settingsTitle">Wheel settings</h1>
+        <p class="settings-description">Choose how many colors appear on the wheel. Your choice is saved in this browser.</p>
+        <label class="settings-label" for="colorCount">
+          Number of colors
+          <select class="settings-select" id="colorCount" name="colorCount">
+            <option value="2">2 colors</option>
+            <option value="3">3 colors</option>
+            <option value="4">4 colors</option>
+            <option value="5">5 colors</option>
+            <option value="6">6 colors</option>
+            <option value="7">7 colors</option>
+            <option value="8" selected>8 colors</option>
+            <option value="9">9 colors</option>
+            <option value="10">10 colors</option>
+            <option value="11">11 colors</option>
+            <option value="12">12 colors</option>
+            <option value="13">13 colors</option>
+            <option value="14">14 colors</option>
+            <option value="15">15 colors</option>
+            <option value="16">16 colors</option>
+          </select>
+        </label>
+        <div class="settings-actions">
+          <a class="settings-back" id="backToWheel" href="./">Back to wheel</a>
+          <button class="settings-save" type="submit">Save settings</button>
+        </div>
+        <p class="settings-message" id="settingsMessage" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
     <section class="stage" id="stage" aria-label="Swipe up or down on the wheel to spin it">
       <div class="wheel-wrap">
-        <div class="wheel" id="wheel" role="img" aria-label="Eight-section color wheel">
-          <span class="wheel-label">RED</span>
-          <span class="wheel-label">ORANGE</span>
-          <span class="wheel-label">YELLOW</span>
-          <span class="wheel-label">LIME</span>
-          <span class="wheel-label">TEAL</span>
-          <span class="wheel-label">BLUE</span>
-          <span class="wheel-label">PURPLE</span>
-          <span class="wheel-label">PINK</span>
-        </div>
+        <div class="wheel" id="wheel" role="img" aria-label="Eight-section color wheel"></div>
         <div class="hub" aria-hidden="true"><div class="hub-core"></div></div>
         <div class="pointer" aria-hidden="true">
           <svg viewBox="0 0 30 42" fill="none">
@@ -396,6 +486,11 @@
       const wheel = document.getElementById("wheel");
       const pointer = document.querySelector(".pointer");
       const hub = document.querySelector(".hub");
+      const settingsView = document.getElementById("settingsView");
+      const settingsForm = document.getElementById("settingsForm");
+      const colorCountSelect = document.getElementById("colorCount");
+      const settingsMessage = document.getElementById("settingsMessage");
+      const backToWheel = document.getElementById("backToWheel");
       const fullscreenButton = document.getElementById("fullscreenButton");
       const instructionTitle = document.getElementById("instructionTitle");
       const instructionSubtitle = document.getElementById("instructionSubtitle");
@@ -415,17 +510,113 @@
       const swipeMomentum = 1.35;
       const velocityWindowMs = 80;
 
-      const colors = ["#e74c3c", "#f97316", "#facc15", "#84cc16", "#14b8a6", "#3b82f6", "#8b5cf6", "#ec4899"];
-      colors.forEach((color, index) => wheel.style.setProperty(`--color-${index + 1}`, color));
+      const palette = [
+        { name: "RED", color: "#e74c3c" },
+        { name: "ORANGE", color: "#f97316" },
+        { name: "YELLOW", color: "#facc15" },
+        { name: "LIME", color: "#84cc16" },
+        { name: "TEAL", color: "#14b8a6" },
+        { name: "BLUE", color: "#3b82f6" },
+        { name: "PURPLE", color: "#8b5cf6" },
+        { name: "PINK", color: "#ec4899" },
+        { name: "GREEN", color: "#22c55e" },
+        { name: "CYAN", color: "#06b6d4" },
+        { name: "INDIGO", color: "#6366f1" },
+        { name: "VIOLET", color: "#a855f7" },
+        { name: "MAGENTA", color: "#d946ef" },
+        { name: "ROSE", color: "#f43f5e" },
+        { name: "SLATE", color: "#64748b" },
+        { name: "STONE", color: "#78716c" }
+      ];
+      const wheelPalette = [...palette];
+      for (let index = wheelPalette.length - 1; index > 0; index--) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [wheelPalette[index], wheelPalette[swapIndex]] = [wheelPalette[swapIndex], wheelPalette[index]];
+      }
+      const storageKey = "orbit-color-count";
+      const settingsEnabled = new URLSearchParams(window.location.search).has("opt");
+      let colorCount = 8;
+      let colors = [];
+
+      function loadColorCount() {
+        try {
+          const savedCount = Number(window.localStorage.getItem(storageKey));
+          return Number.isInteger(savedCount) && savedCount >= 2 && savedCount <= palette.length ? savedCount : 8;
+        } catch (error) {
+          console.error("Could not load the saved wheel color count.", error);
+          settingsMessage.textContent = "Could not load saved settings. The wheel is using 8 colors.";
+          return 8;
+        }
+      }
+
+      function configureWheel(count) {
+        colorCount = count;
+        const segments = wheelPalette.slice(0, colorCount);
+        colors = segments.map(({ color }) => color);
+        const segmentAngle = 360 / colorCount;
+        const startAngle = -segmentAngle / 2;
+        wheel.style.setProperty("--segment-angle", `${segmentAngle}deg`);
+        wheel.style.setProperty("--wheel-start-angle", `${startAngle}deg`);
+        wheel.style.setProperty("--wheel-background", `conic-gradient(from ${startAngle}deg, ${colors.map((color, index) => `${color} ${index * segmentAngle}deg ${(index + 1) * segmentAngle}deg`).join(", ")})`);
+        wheel.setAttribute("aria-label", `${colorCount}-section color wheel`);
+
+        wheel.replaceChildren();
+        segments.forEach(({ name }, index) => {
+          const label = document.createElement("span");
+          const angleDegrees = index * segmentAngle;
+          let labelAngle = angleDegrees - 90;
+          if (labelAngle > 90 || labelAngle < -90) labelAngle += 180;
+          const angle = angleDegrees * Math.PI / 180;
+          label.className = "wheel-label";
+          label.textContent = name;
+          label.style.left = `${50 + 32 * Math.sin(angle)}%`;
+          label.style.top = `${50 - 32 * Math.cos(angle)}%`;
+          label.style.setProperty("--label-angle", `${labelAngle}deg`);
+          wheel.append(label);
+        });
+      }
 
       function render() {
         wheel.style.transform = `rotate(${rotation}deg)`;
-        const pointerAngle = ((22.5 - rotation) % 360 + 360) % 360;
-        const colorIndex = Math.floor(pointerAngle / 45);
+        const segmentAngle = 360 / colorCount;
+        const pointerAngle = ((segmentAngle / 2 - rotation) % 360 + 360) % 360;
+        const colorIndex = Math.floor(pointerAngle / segmentAngle);
         const indicatorColor = colors[colorIndex];
         pointer.style.setProperty("--pointer-color", indicatorColor);
         hub.style.setProperty("--pointer-color", indicatorColor);
       }
+
+      if (settingsEnabled) {
+        app.classList.add("settings-mode");
+        settingsView.hidden = false;
+        const returnUrl = new URL(window.location.href);
+        returnUrl.searchParams.delete("opt");
+        backToWheel.href = returnUrl.href;
+      }
+
+      colorCount = loadColorCount();
+      colorCountSelect.value = String(colorCount);
+      configureWheel(colorCount);
+      settingsForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const selectedCount = Number(colorCountSelect.value);
+        if (!Number.isInteger(selectedCount) || selectedCount < 2 || selectedCount > palette.length) {
+          settingsMessage.textContent = "Choose a color count from 2 to 16.";
+          return;
+        }
+
+        try {
+          window.localStorage.setItem(storageKey, String(selectedCount));
+        } catch (error) {
+          console.error("Could not save the wheel color count.", error);
+          settingsMessage.textContent = "Could not save settings. Check your browser storage permissions.";
+          return;
+        }
+
+        configureWheel(selectedCount);
+        render();
+        settingsMessage.textContent = "Settings saved.";
+      });
 
       function setSpinning(spinning) {
         app.classList.toggle("is-spinning", spinning);
