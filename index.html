@@ -405,11 +405,10 @@
       let lastFrameTime = 0;
       let pointerId = null;
       let lastY = 0;
-      let lastTime = 0;
-      let gestureVelocity = 0;
+      let gestureSamples = [];
 
       const friction = 0.986;
-      const maxVelocity = 1.8;
+      const maxVelocity = 18;
 
       function render() {
         wheel.style.transform = `rotate(${rotation}deg)`;
@@ -461,8 +460,7 @@
         pointerId = event.pointerId;
         stage.setPointerCapture(pointerId);
         lastY = event.clientY;
-        lastTime = performance.now();
-        gestureVelocity = 0;
+        gestureSamples = [{ y: lastY, time: performance.now() }];
         stopAnimation();
         angularVelocity = 0;
         setSpinning(false);
@@ -472,18 +470,23 @@
         if (event.pointerId !== pointerId) return;
         const now = performance.now();
         const deltaY = event.clientY - lastY;
-        const elapsed = Math.max(1, now - lastTime);
         rotation += deltaY * 0.72;
-        gestureVelocity = (deltaY * 0.72) / elapsed;
         lastY = event.clientY;
-        lastTime = now;
+        gestureSamples.push({ y: lastY, time: now });
+        while (gestureSamples.length > 2 && gestureSamples[1].time < now - 100) {
+          gestureSamples.shift();
+        }
         render();
       });
 
       function endGesture(event) {
         if (event.pointerId !== pointerId) return;
         pointerId = null;
-        startSpin(gestureVelocity * 16.67);
+        const firstSample = gestureSamples[0];
+        const lastSample = gestureSamples[gestureSamples.length - 1];
+        const elapsed = Math.max(1, lastSample.time - firstSample.time);
+        const velocity = ((lastSample.y - firstSample.y) * 0.72 / elapsed) * 16.67;
+        startSpin(velocity);
       }
 
       stage.addEventListener("pointerup", endGesture);
