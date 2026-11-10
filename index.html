@@ -168,14 +168,14 @@
       border-radius: 50%;
       background: conic-gradient(
         from -22.5deg,
-        #8b68fa 0deg 45deg,
-        #21a9a2 45deg 90deg,
-        #5141bd 90deg 135deg,
-        #e17b74 135deg 180deg,
-        #7652d8 180deg 225deg,
-        #3b94bd 225deg 270deg,
-        #b270d5 270deg 315deg,
-        #4d69d7 315deg 360deg
+        var(--color-1) 0deg 45deg,
+        var(--color-2) 45deg 90deg,
+        var(--color-3) 90deg 135deg,
+        var(--color-4) 135deg 180deg,
+        var(--color-5) 180deg 225deg,
+        var(--color-6) 225deg 270deg,
+        var(--color-7) 270deg 315deg,
+        var(--color-8) 315deg 360deg
       );
       box-shadow:
         0 24px 80px rgba(0, 0, 0, .48),
@@ -407,8 +407,19 @@
       let lastY = 0;
       let gestureSamples = [];
 
-      const friction = 0.986;
+      const friction = 0.99;
       const maxVelocity = 18;
+
+      const baseHue = Math.random() * 360;
+      for (let index = 0; index < 8; index += 1) {
+        const hue = (baseHue + index * 45 + (Math.random() - 0.5) * 24 + 360) % 360;
+        const saturation = 65 + Math.random() * 16;
+        const lightness = 45 + Math.random() * 12;
+        wheel.style.setProperty(
+          `--color-${index + 1}`,
+          `hsl(${hue.toFixed(1)} ${saturation.toFixed(1)}% ${lightness.toFixed(1)}%)`
+        );
+      }
 
       function render() {
         wheel.style.transform = `rotate(${rotation}deg)`;
